@@ -65,9 +65,9 @@ def show_debug_grid(grille):
             print(f"{y}  | ", end="") 
         for x in range(1, 11):
             type_element = grille[(x, y)][0]
-            if type_element.startswith("-") is False: 
-                type_element = " " + type_element
-            print(type_element, end=" ")
+            if type_element.startswith("-") is False: # il va s'aligner par rapport au tiret car les caracteres sont pas tous de la meme taille 0:1 caractere -1:2carateres
+                type_element = " " + type_element   #  ajoute un espace par raport au tiret tout ces infos vont dans type_element
+            print(type_element, end=" ")    #print type_element donc les espace necessaire pour s'alligner avec les tiret
         print("|") # | pour fermer la grille 
     print("    --------------------------------")
 
@@ -108,7 +108,7 @@ add_mines_to_grid(liste_position, grille)
 
 while True:
     show_player_grid(grille)
-    choix_joueur = str(input("Que voulez vous faire ?, découvrir une case: c ; planter un drapeau: d\n")) #demande au joueur de taper c ou d
+    choix_joueur = str(input("Que voulez vous faire ?,\ndécouvrir une case: c ; planter un drapeau: d\n")) #demande au joueur de taper c ou d
     if choix_joueur == "c" or choix_joueur == "d": #si il tape c ou d ca continue si non il affiche un message d erreur crer par nos soins
         positionx_joueur = int(input("saisissez l'abscisse de la case: "))  #demande les coordonées en absisse 
         positiony_joueur = int(input("saisissez l'ordonnée de la case: ")) #demande les coordonées en ordonnée
