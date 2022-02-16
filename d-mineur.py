@@ -26,9 +26,9 @@ def generate_mines():
     while mine < 20: 
         x=randint(1, 10) #position aleatoire de x entre 1 et 10 
         y=randint(1, 10) #position aleatoire de y entre 1 et 10
-        if (x,y) not in liste_position: #si ce x et y n'existe pas alors on introduit de x y dans la liste_position si x y n y est pas deja
+        if (x,y) not in liste_position: #si ce x et y n'existe pas alors:
             liste_position.append((x,y)) #introduction de x et y dans la liste_position
-            mine+=1
+            mine+=1 # on dit que 1 mine a ete crée
     return liste_position 
 
 
@@ -63,10 +63,12 @@ def show_debug_grid(grille):
             print(f"{y} | ", end="")   # {y} coorespond a tous les coordonée en ordonné de 1 a 10 il les affiches donc
         else:                               # supprimer un espace à cause des 2 chiffres provoquant un décalage de ligne 
             print(f"{y}  | ", end="") 
-        for x in range(1, 11):
+        '''interieur de la grille'''
+        for x in range(1, 11):  
             type_element = grille[(x, y)][0]
-            if type_element.startswith("-") is False: # il va s'aligner par rapport au tiret car les caracteres sont pas tous de la meme taille 0:1 caractere -1:2carateres
-                type_element = " " + type_element   #  ajoute un espace par raport au tiret tout ces infos vont dans type_element
+            '''permet lalignement des bombes dans le tableau'''
+            if type_element.startswith("-") is False:#s'aligne au tiret # les bombes vont s'aligner par rapport au tiret car les caracteres sont pas tous de la meme taille 0:1 caractere -1:2carateres
+                type_element = " " + type_element #ajoute des espaces  #  ajoute un espace par raport au tiret tout ces infos vont dans type_element
             print(type_element, end=" ")    #print type_element donc les espace necessaire pour s'alligner avec les tiret
         print("|") # | pour fermer la grille 
     print("    --------------------------------")
