@@ -1,45 +1,43 @@
 from random import randint
-from tkinter import Grid
-from turtle import Turtle
+import colorama
+from colorama import Fore, Back, Style
 
 
 def generate_grid():
-    """Generation de la gille 
+    """Generate the grid
     type:
      0: vide
     -1: mine
-    -2: drapeau
     """
 
-    grille = {}
+    grid = {}
     for colonne in range(1, 11):
         for ligne in range(1, 11):
-            grille[(colonne, ligne)] = ["0", "0", False]  # [type, nombre_de_mine_autour, decouverte]
-    return grille
+            grid[(colonne, ligne)] = ["0", False, False]  # [type, number_of_mines_surronding, discovered_bool]
+    return grid
 
 
-
-def generate_mines():
-    """creation de la position de 20 mines aleatoires"""
-    liste_position = [] # creation de la liste qui va contenir les coordonées aleatoire des bombes
+def generate_mines(number_mines):
+    """creation des bombes aleatoirement choisie"""
+    liste_position = []
     mine = 0
-    while mine < 20: 
-        x=randint(1, 10) #position aleatoire de x entre 1 et 10 
-        y=randint(1, 10) #position aleatoire de y entre 1 et 10
-        if (x,y) not in liste_position: #si ce x et y n'existe pas alors:
-            liste_position.append((x,y)) #introduction de x et y dans la liste_position
-            mine+=1 # on dit que 1 mine a ete crée
-    return liste_position 
+    while mine < number_mines:
+        x=randint(1, 10)
+        y=randint(1, 10)
+        if (x,y) not in liste_position:
+            liste_position.append((x,y))
+            mine+=1
+    return liste_position
 
 
-
-def add_mines_to_grid(liste_position, grille):  
-    for i in range(20): 
-        if liste_position[i] in grille: 
-            [x,y] = liste_position[i] # recupere les coordonées en position i  
-            grille[(x,y)] = ["-1", "0", False] # positionnement des bombes dans le dico a partir de la liste de coordonées aleatoire
-    return grille
-
+def add_mines_to_grid(liste_position, grid, number_mines): 
+    """ insérer des mines à des positions spécifiques stockées dans liste_position """
+    for i in range(number_mines):
+        if liste_position[0] in grid:
+            [x,y] = liste_position[0]
+            grid[(x,y)] = ["-1", "0", False]
+            liste_position.remove(liste_position[0])
+    return grid
 
 def calculate_near_sum(coo, grille):
     near_sum = 0
@@ -51,31 +49,51 @@ def calculate_near_sum(coo, grille):
                     near_sum += 1 
     return near_sum  
 
-    
-def show_debug_grid(grille):
+def show_near_empty_cases(coo, grid): #victor 
+    for x in range(-1, 2):
+        for y in range(-1, 2):
+            if x != 0 or y != 0:
+                try:
+                    if grid[(int(coo[0]-x), int(coo[1]-y))][0] == "0":
+                        grid[(int(coo[0]-x), int(coo[1]-y))][2] = True
+                except:
+                    pass
+
+
+
+def show_debug_grid(grid):
     print("""
 ====    grille secrète:  ====
 """)
     print("      1  2  3  4  5  6  7  8  9  10")
     print("    ________________________________")
     for y in range(1, 11):
-        if y == 10: # pour la derniere ligne
-            print(f"{y} | ", end="")   # {y} coorespond a tous les coordonée en ordonné de 1 a 10 il les affiches donc
-        else:                               # supprimer un espace à cause des 2 chiffres provoquant un décalage de ligne 
+        if y == 10: ## pour la dernière ligne
+            print(f"{y} | ", end="")  # supprimer un espace à cause des 2 chiffres provoquant un décalage de ligne
+        else:
             print(f"{y}  | ", end="") 
-        '''interieur de la grille'''
-        for x in range(1, 11):  
-            type_element = grille[(x, y)][0]
-            '''permet lalignement des bombes dans le tableau'''
-            if type_element.startswith("-") is False:#s'aligne au tiret # les bombes vont s'aligner par rapport au tiret car les caracteres sont pas tous de la meme taille 0:1 caractere -1:2carateres
-                type_element = " " + type_element #ajoute des espaces  #  ajoute un espace par raport au tiret tout ces infos vont dans type_element
-            print(type_element, end=" ")    #print type_element donc les espace necessaire pour s'alligner avec les tiret
-        print("|") # | pour fermer la grille 
+        for x in range(1, 11):
+            type_element = grid[(x, y)][0]
+            if type_element.startswith("-") is False:
+                type_element = " " + type_element  # corrige le décalage de ligne '-'
+            print(type_element, end=" ")
+        print("|") # ferme le côté droit de la grille
     print("    --------------------------------")
 
 
+def get_color_prefix(number): # lino
+    if number == "1":
+        return "\033[1;36;40m" # bleu
+    if number == "2":
+        return "\033[1;32;40m" # vert
+    if number == "3":
+        return "\033[1;31;40m" # rouge
+    if number == "4":
+        return "\033[1;37;40m" # blanc
+    else:
+        return ""
 
-def show_player_grid(grille):
+def show_player_grid(grid):
     """Prints the player grid"""
     print("""
 ====    grille démineur:  ====
@@ -83,50 +101,137 @@ def show_player_grid(grille):
     print("      1  2  3  4  5  6  7  8  9  10")
     print("    ________________________________")
     for y in range(1, 11):
-        if y == 10: ## pour la derniere ligne
-            print(f"{y} | ", end="")  # {y} coorespond a tous les coordonée en ordonné de 1 a 10 il les affiches donc
-        else:                           # supprimer un espace à cause des 2 chiffres provoquant un décalage de ligne 
+        if y == 10: ## pour imprimer 10 lignes
+            print(f"{y} | ", end="")  
+        else:                           ##supprimer un espace à cause des 2 chiffres provoquant un décalage de ligne
             print(f"{y}  | ", end="")
         for x in range(1, 11):
-            if grille[(x, y)][2] is True: # lorsque l element est decouvert par le joueur ca l'affiche
-                print(" " + str(calculate_near_sum((x, y), grille)), end=" ") #ca affiche le numero en suprimant les espaces (debug)
-            elif grille[(x, y)][2] is None: # si il a tape d il place donc un drapeau car d pace la derniere valeur du dico en None
-                print(" #", end=" ") 
+            if grid[(x, y)][1] is True: # si le drapeau est placé ici 
+                print("\033[1;33;40m #\033[0m", end=" ")
+            elif grid[(x, y)][2] is True: # lorsque l'élément est découvert par le joueur il l'affiche
+                near_sum = str(calculate_near_sum((x,y), grid))
+                print(" " + get_color_prefix(near_sum) + near_sum, end="\033[0m ") 
             else:
-                print(" .", end=" ") #affichage geneale de la grille
-        print("|") # ferme le coté droit de la grille
+                print(" .", end=" ") 
+        print("|") 
     print("    --------------------------------")
 
 
-# fonction principale
+def check_if_coordinate_valid(positionx, positiony):  # cleante
+    """ vérifier si les coordonnées (positionx et positiony) sont valides  """
+    if 1 <= positionx <= 10 and 1 <= positiony <= 10:
+        return True
+    else:
+        return False
 
-grille = generate_grid()
-liste_position = generate_mines()
-add_mines_to_grid(liste_position, grille)
+def get_coordinates():
+    """ demander les coordonnées à l'utilisateur """
+    positionx = int(input("saisissez l'abscisse de la case: "))   
+    positiony = int(input("saisissez l'ordonnée de la case: ")) 
+    return positionx, positiony
 
 
-
-
-
-while True:
-    show_player_grid(grille)
-    choix_joueur = str(input("Que voulez vous faire ?,\ndécouvrir une case: c ; planter un drapeau: d\n")) #demande au joueur de taper c ou d
-    if choix_joueur == "c" or choix_joueur == "d": #si il tape c ou d ca continue si non il affiche un message d erreur crer par nos soins
-        positionx_joueur = int(input("saisissez l'abscisse de la case: "))  #demande les coordonées en absisse 
-        positiony_joueur = int(input("saisissez l'ordonnée de la case: ")) #demande les coordonées en ordonnée
-        if 1 <= positionx_joueur <= 10 and 1 <= positiony_joueur <= 10:   # vérifier si l'entrée existe    
-            if grille[(positionx_joueur, positiony_joueur)][2] is False:  # si la case n'a pas encore été découvert :
-                if choix_joueur == "c": #si le joueur a tapé c:
-                    if grille[(positionx_joueur, positiony_joueur)][0] == "-1":  # si cette case est une bombe 
-                        print("BOOM !")
-                        exit() #cela sort du programme
-                    grille[(positionx_joueur, positiony_joueur)][2] = True  #dans tous les cas ca la marque comme découverte
-                if choix_joueur == "d": #si le joueur a tapé d:
-                    grille[(positionx_joueur, positiony_joueur)][2] = None # affiche un # qui sera suprimable ou possible de changer de place
-                    grille[(positionx_joueur, positiony_joueur)][0] == "-2" # marquer le cas comme un drapeau
-            else:
-                print("Mauvaise touche !") # cela s'affiche si le joueur n'a tapé ni c ni d
+def interact_case(first_move, grid): #leo
+    """ cliquez sur un cas spécifique """
+    positionx, positiony = get_coordinates()
+    coo_valid = check_if_coordinate_valid(positionx, positiony)
+    coo = positionx, positiony
+    if first_move is True: 
+        show_near_empty_cases(coo, grid)
+    if coo_valid and grid[(positionx, positiony)][2] is False:  # si la case n'est pas encore découvert 
+        if grid[(positionx, positiony)][0] == "-1": # si c'est une mine  
+            print("BOOM !")
+            play_game() #leo
         else:
-            print("case invalide !") # cela s'affiche si le joueur entre des coordonées invalide (> 10 10)
-    elif choix_joueur == "debug": #il faut ecrire debug pour que la grille des solutions s'affiche 
-        show_debug_grid(grille) #cela affiche la grille de debug
+            grid[(positionx, positiony)][2] = True  # marquer le cas comme découvert 
+    else:
+        if coo_valid is False:
+            print("\033[1;31;40m" + "Coordonees invalides !! Veuillez entrer des coordonees corrects" + "\033[0m")
+        
+        else:
+            print("Case déja découverte Veuillez choisir une autre case !")
+
+
+def interact_flag(grid): #victor
+    """ ajoute ou supprime un drapeau à des coordonnées spécifiques"""
+    positionx, positiony = get_coordinates()
+    coo_valid = check_if_coordinate_valid(positionx, positiony)
+    interaction_type = input("Voulez vous ajouter (a) ou supprimer (s) un drappeau ? (a/s): ") 
+    if coo_valid and interaction_type == "a":
+        grid[(positionx, positiony)][1] = True  # ajouter un drapeau au case au coordonnées de position x y
+    elif coo_valid and interaction_type == "s":
+        grid[(positionx, positiony)][1] = False  # ajouter un drapeau au case au coordonnées de position x y
+    else:
+        if coo_valid is False:
+            print("Coordonees invalides !! Veuillez entrer des coordonees corrects")
+        
+        else:
+            print("Case déja découver, Veuillez choisir une autre case !")
+
+def get_highest_score():
+    """ retourne le meilleur score de highest_score""" 
+    score_file = open('highest_score.txt','r')
+    score = score_file.read()  #exactement ce qu on a fait un classe avec les fichiers CSV
+    score_file.close()
+    if score != "":
+        return int(score)
+    else:
+        return 0  # pas de meilleur score sauvegardé
+
+
+def save_highest_score(score): 
+    """ save le score le plus eleve dans highest_score"""
+    score_file = open('highest_score.txt','w')
+    score_file.write(str(score))
+    score_file.close()
+
+# la fonction principale
+def play_game(pseudo = "Joueur"): #lino
+    """  Fonction, la fonction principale de démarrage du jeu """
+    grid = generate_grid()
+    number_mines = int(input("combien de mine voulez vous avoir dans la grille ? "))
+    liste_position = generate_mines(number_mines)
+    add_mines_to_grid(liste_position, grid, number_mines)
+
+    highest_score = get_highest_score()
+    first_move = True
+    case_valid = 0
+
+    while True:
+        show_player_grid(grid)
+        if case_valid > highest_score: #affichage fin de partie meilleur score
+            print(f"Nouveau record battu {pseudo} ! le score de {case_valid} est atteint")
+            save_highest_score(case_valid) # SAuvegarde du meilleur score
+        choix_joueur = str(input("Que voulez vous faire ?,\ndécouvrir une case: c ; planter un drapeau: d\n")) 
+        if choix_joueur == "c": #si le joueur repond c
+            interact_case(first_move, grid) # Validité de la case
+            first_move = False # regarde si c est le premier mouv
+            case_valid += 1 # rajoute un coup dans la fiche des scores
+        elif choix_joueur == "d": #choix du joueur drapeau (retourne a la fonction intearct_flag)
+            interact_flag(grid) 
+        elif choix_joueur == "NSI":  
+            show_debug_grid(grid) #grille des solutions
+    
+
+def Credit():
+    print("""Créé par Victor Lino et Leo, en collaboration avec Mr Coudert""")
+
+username = None
+exit_now = False
+colorama.init()
+while exit_now is not True:
+    menu_ask = input("Que voulez vous faire ? Ecrivez: \n\n• JOUER pour lancer le jeu \n\n• CREDIT pour afficher les crédits \n\n• NOM pour changer de nom \n\n• SORTIE pour sortir \n\n")
+    if menu_ask == "NOM":
+        username = input("Quel est votre pseudo ?")
+    if menu_ask == "JOUER":
+        if username is not None:
+            play_game(username)
+        else:
+            play_game()
+    if menu_ask == "CREDIT":
+        Credit()
+    if menu_ask == "SORTIE":
+        exit_now = True
+        exit()
+
+    
